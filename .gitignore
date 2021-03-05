@@ -1,4 +1,10 @@
+# Environment files
+.vscode/
+.venv/
+
+# Data files
 cityscapes/
 models/
 
+# Generated files
 *.pyc
