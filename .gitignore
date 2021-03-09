@@ -8,3 +8,6 @@ models/
 
 # Generated files
 *.pyc
+
+# SSH key
+reroute-key-pair.pem
