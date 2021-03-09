@@ -3,18 +3,19 @@
 import os
 import shutil
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
 from lib.models.segmentation import DeepLabV3
-from lib.models.style_transfer import AdaIN_MobileNetV2
+from lib.models.style_transfer import MobileAdaIN
 from lib.visualize import vis_segmentation
 
 
 def save_model(model):
-    image = Image.open(
+    image = cv2.imread(
         'cityscapes/leftImg8bit/test/berlin/berlin_000032_000019_leftImg8bit.png'
     )
     resized_im, batch_seg_map = model.run(image)
@@ -32,9 +33,13 @@ def save_model(model):
 
 
 if __name__ == '__main__':
-    model = DeepLabV3(tarball_path='./models/mobilenetv2_coco_cityscapes_trainfine/deeplabv3_mnv2_cityscapes_train_2018_02_05.tar.gz')
+    model = DeepLabV3(
+        tarball_path=
+        './models/mobilenetv2_coco_cityscapes_trainfine/deeplab_model.tar.gz')
 
-    dataset, info = tfds.load('cityscapes/semantic_segmentation', split='train', with_info=True)
+    dataset, info = tfds.load('cityscapes/semantic_segmentation',
+                              split='train',
+                              with_info=True)
 
     example = next(iter(dataset))
     print(example['image_id'])
