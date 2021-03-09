@@ -4,6 +4,8 @@ import os
 import shutil
 
 import cv2
+import matplotlib
+matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -43,11 +45,26 @@ if __name__ == '__main__':
 
     example = next(iter(dataset))
     print(example['image_id'])
-    print(example['image_left'])
-    print(example['segmentation_label'])
+    print(type(example['image_left']), example['image_left'].shape)
+    print(type(example['segmentation_label']),
+          example['segmentation_label'].shape)
 
-    tfds.visualization.show_examples(dataset, info, row=3, col=3)
-
+    import time
+    start = time.time()
+    resized_img, batch_seg_map = model.run(example['image_left'])
+    print('Prediction complete in: {}'.format(start - time.time()))
+    prediction = cv2.resize(batch_seg_map[0].numpy(),
+                            dsize=example['image_left'].shape[:-1],
+                            interpolation=cv2.INTER_AREA)
+    # fig, ax = plt.subplots(1, 3)
+    # ax[0].imshow(example['image_left'])
+    # ax[0].set_title('Input')
+    # ax[1].imshow(prediction)
+    # ax[1].set_title('Prediction')
+    # ax[2].imshow(example['segmentation_label'])
+    # ax[2].set_title('Target')
+    # fig.savefig('preds.png')
+    # fig.close()
     # fig, ax = plt.subplots(5, 4)
     # for i, example in enumerate(dataset):
     #     if i == 5:
