@@ -1,0 +1,4 @@
+tensorflow==2.4.1
+tensorflow-datasets==4.2.0
+cityscapesScripts==2.2.0
+opencv-python==4.5.1.48
