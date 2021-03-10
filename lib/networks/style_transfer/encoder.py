@@ -14,7 +14,7 @@ class Encoder(layers.Layer):
     def __init__(self,
                  input_shape=(None, 513, 256, 3),
                  name='mobilenetv2_encoder',
-                 cutoff_layer='block_11_expand',
+                 cutoff_layer='block_10_project_BN',
                  **kwargs):
         """Creates the encoder with."""
         super(Encoder, self).__init__(name=name, **kwargs)
