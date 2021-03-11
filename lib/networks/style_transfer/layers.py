@@ -44,30 +44,28 @@ class ReflectionPad2D(layers.Layer):
 
     def call(self, x):
         """Reflection pads an image."""
-        return tf.pad(x, [[0, 0], *self.padding, [0, 0]], mode='reflect')
+        return tf.pad(x, [[0, 0], *self.padding, [0, 0]], mode='REFLECT')
+
+    def get_config(self):
+        """Get a dict of assigned options for this layer."""
+        base_config = super(ReflectionPad2D, self).get_config()
+        config = {'padding': self.padding, **base_config}
+        return config
 
 
-class MNetV2_Block(layers.Layer):
-    """A bottleneck block, as articulated in the MobileNetV2 paper."""
-    def __init__(self,
-                 input_size,
-                 output_size,
-                 filters,
-                 name='mnetv2_block',
-                 **kwargs):
-        """Creates a MobileNetV2 bottleneck block."""
-        super(MNetV2_Block, self).__init__(name=name, **kwargs)
+class DecoderBlock(layers.Layer):
+    """A decoder block inpsired by MobileNetV2."""
+    def __init__(self, filters, name='mnetv2_block', **kwargs):
+        """Creates a decoder block based on the MobileNetV2 bottleneck block."""
+        super(DecoderBlock, self).__init__(name=name, **kwargs)
+        self.filters = filters
         self.pad1 = ReflectionPad2D(name=name + '_expand_reflection_pad')
-        self.conv1 = layers.Conv2D(filters[0],
+        self.conv1 = layers.Conv2D(self.filters[0],
                                    kernel_size=(1, 1),
                                    padding='valid',
                                    data_format='channels_last',
                                    activation='linear',
                                    name=name + '_expand')
-        self.bn1 = layers.BatchNormalization(axis=3,
-                                             momentum=0.999,
-                                             epsilon=0.001,
-                                             name=name + '_expand_BN')
         self.relu1 = layers.ReLU(max_value=6., name=name + '_expand_relu')
         self.pad2 = layers.ZeroPadding2D(
             padding=((0, 1), (0, 1)),
@@ -80,34 +78,29 @@ class MNetV2_Block(layers.Layer):
                                             activation='linear',
                                             data_format='channels_last',
                                             name=name + '_depthwise')
-        self.bn2 = layers.BatchNormalization(axis=3,
-                                             momentum=0.999,
-                                             epsilon=0.001,
-                                             name=name + '_depthwise_BN')
         self.relu2 = layers.ReLU(max_value=6., name=name + '_depthwise_relu')
         self.pad3 = ReflectionPad2D(name=name + '_project_reflection_pad')
-        self.conv3 = layers.Conv2D(filters[1],
+        self.conv3 = layers.Conv2D(self.filters[1],
                                    kernel_size=(1, 1),
                                    padding='valid',
                                    data_format='channels_last',
                                    activation='linear',
                                    name=name + '_project')
-        self.bn3 = layers.BatchNormalization(axis=3,
-                                             momentum=0.999,
-                                             epsilon=0.001,
-                                             name=name + '_project_BN')
 
     def call(self, x):
-        """Do a forward pass of the MobileNetV2 block on a tensor."""
+        """Do a forward pass of the Decoder block on a tensor."""
         output = self.pad1(x)
         output = self.conv1(output)
-        output = self.bn1(output)
         output = self.relu1(output)
         output = self.pad2(output)
         output = self.conv2(output)
-        output = self.bn2(output)
-        output = self.relu3(output)
+        output = self.relu2(output)
         output = self.pad3(output)
         output = self.conv3(output)
-        output = self.bn3(output)
         return output
+
+    def get_config(self):
+        """Get a dict of assigned options for this layer."""
+        base_config = super(DecoderBlock, self).get_config()
+        config = {'filters': self.filters, **base_config}
+        return config
