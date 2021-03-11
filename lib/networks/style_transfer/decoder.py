@@ -66,12 +66,10 @@ class Decoder(layers.Layer):
 
 if __name__ == '__main__':
     block = Decoder()
-    # for layer in block._layers:
-    #     print(layer.name, layer.get_config())
 
     import tensorflow as tf
     input_shape = (1, 14, 14, 96)
     test = tf.random.uniform(input_shape)
     assert test.shape == input_shape
-    output = block.call(test)
+    output = block(test)
     assert output.shape == (1, 224, 224, 3)

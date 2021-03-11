@@ -7,19 +7,25 @@ import os
 import tensorflow as tf
 import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
-import tensorflow.keras.models as models
 
 from layers import ReflectionPad2D
 
 
-class Encoder(keras.Model):
+class Encoder(layers.Layer):
     """An encoding network based on MobileNetV2 with reflection padding."""
     def __init__(self,
                  name='mobilenetv2_encoder',
+                 output_layers=[
+                     'expanded_conv_project_BN', 'block_1_project_BN',
+                     'block_3_project_BN', 'block_6_project_BN',
+                     'block_10_project_BN'
+                 ],
                  cutoff_layer='block_10_project_BN',
                  **kwargs):
         """Creates the encoder with."""
         super(Encoder, self).__init__(name=name, **kwargs)
+        self.output_layers = set(output_layers)
+        # Transfer learn a model from MobileNetV2()
         backbone = keras.applications.MobileNetV2()
         last_layer = backbone.get_layer(cutoff_layer)
         self._layers = []
@@ -47,16 +53,19 @@ class Encoder(keras.Model):
 
     def call(self, x):
         """Encodes a single tensor."""
-        output = x
+        z = x
         residual = None
+        outputs = []
         for layer in self._layers:
             if layer.name.endswith('_add'):
-                output = layer([residual, output])
+                z = layer([residual, z])
             else:
-                output = layer(output)
+                z = layer(z)
             if layer.name.endswith('_project_BN'):
-                residual = output
-        return output
+                residual = z
+            if layer.name in self.output_layers:
+                outputs.append(z)
+        return outputs
 
 
 if __name__ == '__main__':
@@ -66,5 +75,5 @@ if __name__ == '__main__':
     input_shape = (10, 224, 224, 3)
     X = tf.random.uniform(input_shape)
     assert X.shape == input_shape
-    Y = block.call(X)
+    Y = block(X)
     assert Y.shape == (10, 14, 14, 96)

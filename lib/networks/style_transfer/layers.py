@@ -5,6 +5,8 @@
 import tensorflow as tf
 import tensorflow.keras.layers as layers
 
+from losses import content_loss, style_loss
+
 
 class AdaIN(layers.Layer):
     """Adjusts the distribution of a content tensor to match a style tensor, instance-wise."""
@@ -23,8 +25,8 @@ class AdaIN(layers.Layer):
         The content tensor, instance normalized to match the distribution of the style tensor.
         """
         content, style = x
-        mean_C, var_C = tf.nn.moments(content, axis=[1, 2], keepdims=True)
-        mean_S, var_S = tf.nn.moments(style, axis=[1, 2], keepdims=True)
+        mean_C, var_C = tf.nn.moments(content, axes=[1, 2], keepdims=True)
+        mean_S, var_S = tf.nn.moments(style, axes=[1, 2], keepdims=True)
         std_C = tf.math.sqrt(var_C + self.epsilon)
         std_S = tf.math.sqrt(var_S + self.epsilon)
         return std_S * (content - mean_C) / std_C + mean_S
@@ -103,3 +105,23 @@ class DecoderBlock(layers.Layer):
         base_config = super(DecoderBlock, self).get_config()
         config = {'filters': self.filters, **base_config}
         return config
+
+
+class TVLoss(layers.Layer):
+    """A layer that computes TVLoss as a weighted sum of content and style loss."""
+    def __init__(self,
+                 content_weight=1,
+                 style_weight=1e-2,
+                 name='tv_loss',
+                 **kwargs):
+        """Create a TVLoss layer."""
+        super(TVLoss, self).__init__(self, name=name, **kwargs)
+        self.content_weight = content_weight
+        self.style_weight = style_weight
+
+    def call(self, x):
+        """Compute the total TVLoss."""
+        style_features, output_features, target = x
+        return self.content_weight * content_loss(
+            target, output_features[-1]) + self.style_weight * style_loss(
+                style_features, output_features)
