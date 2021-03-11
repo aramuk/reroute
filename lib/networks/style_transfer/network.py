@@ -7,10 +7,10 @@ import tensorflow as tf
 from tensorflow.keras import layers, models, optimizers
 from tensorflow.keras.applications import MobileNetV2
 
-from encoder import Encoder
-from decoder import Decoder
-from layers import AdaIN, TVLoss
-from losses import content_loss, style_loss
+from .encoder import Encoder
+from .decoder import Decoder
+from .layers import AdaIN, TVLoss
+from .losses import content_loss, style_loss
 
 
 def build_model(input_shape=(224, 224, 3), **kwargs):
@@ -33,7 +33,8 @@ def build_model(input_shape=(224, 224, 3), **kwargs):
     # Build model
     model = models.Model(
         inputs=[content_input, style_input],
-        outputs=[output, target, content_features, style_features])
+        outputs=[output, target, content_features, style_features],
+        name='MobiletAdaIN')
     return model
 
 

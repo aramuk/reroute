@@ -8,7 +8,7 @@ import tensorflow as tf
 import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
 
-from layers import ReflectionPad2D
+from .layers import ReflectionPad2D
 
 
 class Encoder(layers.Layer):

@@ -5,7 +5,7 @@
 import tensorflow as tf
 import tensorflow.keras.layers as layers
 
-from losses import content_loss, style_loss
+from .losses import content_loss, style_loss
 
 
 class AdaIN(layers.Layer):

@@ -3,7 +3,7 @@
 import os
 import shutil
 
-import cv2
+# import cv2
 import matplotlib
 matplotlib.use('AGG')
 import matplotlib.pyplot as plt
@@ -11,51 +11,53 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-from lib.models.segmentation import DeepLabV3
-from lib.models.style_transfer import MobileAdaIN
+# from lib.networks.segmentation import DeepLabV3
+from lib.networks.style_transfer import build_model
 from lib.visualize import vis_segmentation
 
 
 def save_model(model):
-    image = cv2.imread(
-        'cityscapes/leftImg8bit/test/berlin/berlin_000032_000019_leftImg8bit.png'
-    )
-    resized_im, batch_seg_map = model.run(image)
-    if tf.executing_eagerly():
-        tf.compat.v1.disable_eager_execution()
+    pass
+    # image = cv2.imread(
+    #     'cityscapes/leftImg8bit/test/berlin/berlin_000032_000019_leftImg8bit.png'
+    # )
+    # resized_im, batch_seg_map = model.run(image)
+    # if tf.executing_eagerly():
+    #     tf.compat.v1.disable_eager_execution()
 
-    save_dir = 'models/mobilenetv2_coco_cityscapes_trainfine'
-    if os.path.exists(save_dir):
-        shutil.rmtree(save_dir)
-    tf.compat.v1.saved_model.simple_save(
-        model.sess, save_dir,
-        {model.INPUT_TENSOR_NAME: tf.convert_to_tensor(resized_im)},
-        {model.OUTPUT_TENSOR_NAME: tf.convert_to_tensor(batch_seg_map)})
-    print('{} model saved to {}'.format(model.__class__, save_dir))
+    # save_dir = 'models/mobilenetv2_coco_cityscapes_trainfine'
+    # if os.path.exists(save_dir):
+    #     shutil.rmtree(save_dir)
+    # tf.compat.v1.saved_model.simple_save(
+    #     model.sess, save_dir,
+    #     {model.INPUT_TENSOR_NAME: tf.convert_to_tensor(resized_im)},
+    #     {model.OUTPUT_TENSOR_NAME: tf.convert_to_tensor(batch_seg_map)})
+    # print('{} model saved to {}'.format(model.__class__, save_dir))
 
 
 if __name__ == '__main__':
-    model = DeepLabV3(
-        tarball_path=
-        './models/mobilenetv2_coco_cityscapes_trainfine/deeplab_model.tar.gz')
+    # model = DeepLabV3(
+    #     tarball_path=
+    #     './models/mobilenetv2_coco_cityscapes_trainfine/deeplab_model.tar.gz')
 
     dataset, info = tfds.load('cityscapes/semantic_segmentation',
                               split='train',
                               with_info=True)
+    print(info)
 
-    example = next(iter(dataset))
-    print(example['image_id'])
-    print(type(example['image_left']), example['image_left'].shape)
-    print(type(example['segmentation_label']),
-          example['segmentation_label'].shape)
+    # example = next(iter(dataset))
+    # print(example['image_id'])
+    # print(type(example['image_left']), example['image_left'].shape)
+    # print(type(example['segmentation_label']),
+    #       example['segmentation_label'].shape)
 
-    import time
-    start = time.time()
-    resized_img, batch_seg_map = model.run(example['image_left'])
-    print('Prediction complete in: {}'.format(start - time.time()))
-    prediction = cv2.resize(batch_seg_map[0].numpy(),
-                            dsize=example['image_left'].shape[:-1],
-                            interpolation=cv2.INTER_AREA)
+    # import time
+    # start = time.time()
+    # resized_img, batch_seg_map = model.run(example['image_left'])
+    # print('Prediction complete in: {}'.format(start - time.time()))
+    # prediction = cv2.resize(batch_seg_map[0].numpy(),
+    #                         dsize=example['image_left'].shape[:-1],
+    #                         interpolation=cv2.INTER_AREA)
     # fig, ax = plt.subplots(1, 3)
     # ax[0].imshow(example['image_left'])
     # ax[0].set_title('Input')

@@ -5,7 +5,7 @@
 from tensorflow.keras.applications import MobileNetV2
 import tensorflow.keras.layers as layers
 
-from layers import ReflectionPad2D, DecoderBlock
+from .layers import ReflectionPad2D, DecoderBlock
 
 
 class Decoder(layers.Layer):

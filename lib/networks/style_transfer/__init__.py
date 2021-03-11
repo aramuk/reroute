@@ -1,1 +1,1 @@
-from network import MobileAdaIN
+from .network import build_model
