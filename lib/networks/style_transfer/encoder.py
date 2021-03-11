@@ -46,16 +46,14 @@ class Encoder(keras.Model):
                 break
 
     def call(self, x):
-        """Runs"""
+        """Encodes a single tensor."""
         output = x
         residual = None
         for layer in self._layers:
             if layer.name.endswith('_add'):
                 output = layer([residual, output])
             else:
-                # print(layer.name, ':', output.shape, '=> ', end='')
                 output = layer(output)
-                # print(output.shape)
             if layer.name.endswith('_project_BN'):
                 residual = output
         return output

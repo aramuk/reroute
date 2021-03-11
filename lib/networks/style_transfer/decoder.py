@@ -1,5 +1,5 @@
 ##########################################################
-# A MobileNet-based AdaIN encoder network.               #
+# A MobileNet-based AdaIN decoder network.               #
 ##########################################################
 
 from tensorflow.keras.applications import MobileNetV2
@@ -15,15 +15,27 @@ class Decoder(layers.Layer):
         super(Decoder, self).__init__(name=name, **kwargs)
         self._layers = [
             DecoderBlock([96, 64], name='decode_1'),
+            layers.UpSampling2D(size=(2, 2),
+                                data_format='channels_last',
+                                interpolation='bilinear'),
             DecoderBlock([64, 64], name='decode_2'),
             DecoderBlock([64, 64], name='decode_3'),
             DecoderBlock([64, 64], name='decode_4'),
             DecoderBlock([64, 32], name='decode_5'),
+            layers.UpSampling2D(size=(2, 2),
+                                data_format='channels_last',
+                                interpolation='bilinear'),
             DecoderBlock([32, 32], name='decode_6'),
             DecoderBlock([32, 32], name='decode_7'),
             DecoderBlock([32, 24], name='decode_8'),
+            layers.UpSampling2D(size=(2, 2),
+                                data_format='channels_last',
+                                interpolation='bilinear'),
             DecoderBlock([24, 24], name='decode_9'),
             DecoderBlock([24, 16], name='decode_10'),
+            layers.UpSampling2D(size=(2, 2),
+                                data_format='channels_last',
+                                interpolation='bilinear'),
             ReflectionPad2D(name='decode_reflection_pad'),
             layers.Conv2D(3, (3, 3),
                           padding='valid',
@@ -50,4 +62,4 @@ if __name__ == '__main__':
     test = tf.random.uniform(input_shape)
     assert test.shape == input_shape
     output = block.call(test)
-    print(output.shape)
+    assert output.shape == (1, 224, 224, 3)

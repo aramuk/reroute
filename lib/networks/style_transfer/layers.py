@@ -59,7 +59,8 @@ class DecoderBlock(layers.Layer):
         """Creates a decoder block based on the MobileNetV2 bottleneck block."""
         super(DecoderBlock, self).__init__(name=name, **kwargs)
         self.filters = filters
-        self.pad1 = ReflectionPad2D(name=name + '_expand_reflection_pad')
+        self.pad1 = ReflectionPad2D([[0, 0], [0, 0]],
+                                    name=name + '_expand_reflection_pad')
         self.conv1 = layers.Conv2D(self.filters[0],
                                    kernel_size=(1, 1),
                                    padding='valid',
@@ -67,19 +68,17 @@ class DecoderBlock(layers.Layer):
                                    activation='linear',
                                    name=name + '_expand')
         self.relu1 = layers.ReLU(max_value=6., name=name + '_expand_relu')
-        self.pad2 = layers.ZeroPadding2D(
-            padding=((0, 1), (0, 1)),
-            data_format='channels_last',
-            name=name + '_pad',
-        )
+        self.pad2 = ReflectionPad2D([[1, 1], [1, 1]],
+                                    name=name + '_depthwise_reflection_pad')
         self.conv2 = layers.DepthwiseConv2D(kernel_size=(3, 3),
-                                            strides=(2, 2),
+                                            strides=(1, 1),
                                             padding='valid',
                                             activation='linear',
                                             data_format='channels_last',
                                             name=name + '_depthwise')
         self.relu2 = layers.ReLU(max_value=6., name=name + '_depthwise_relu')
-        self.pad3 = ReflectionPad2D(name=name + '_project_reflection_pad')
+        self.pad3 = ReflectionPad2D([[0, 0], [0, 0]],
+                                    name=name + '_project_reflection_pad')
         self.conv3 = layers.Conv2D(self.filters[1],
                                    kernel_size=(1, 1),
                                    padding='valid',
