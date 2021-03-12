@@ -8,6 +8,10 @@ models/
 
 # Generated files
 *.pyc
+**/__pycache__/**
 
 # SSH key
 reroute-key-pair.pem
+
+# Wikiart Images dataset
+/wikiart_images
