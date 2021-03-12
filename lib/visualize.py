@@ -5,6 +5,7 @@
 from matplotlib import gridspec, pyplot as plt
 import numpy as np
 
+
 def create_pascal_label_colormap():
     """Creates a label colormap used in PASCAL VOC segmentation benchmark.
 

@@ -25,8 +25,7 @@ class MNetV2_DeepLabV3(object):
     def __init__(self, tarball_path):
         """Creates and loads pretrained deeplab model."""
         # Download the model to the specified path if it doesn't exist
-        if not os.path.exists(tarball_path) or not os.path.isfile(
-                tarball_path):
+        if not os.path.exists(tarball_path) or not os.path.isfile(tarball_path):
             print('{} not found at {}. Downloading model...'.format(
                 self.__class__.__name__, tarball_path))
             DeepLabV3.download(os.path.dirname(tarball_path))
@@ -38,8 +37,7 @@ class MNetV2_DeepLabV3(object):
         for tar_info in tar_file.getmembers():
             if self.FROZEN_GRAPH_NAME in os.path.basename(tar_info.name):
                 file_handle = tar_file.extractfile(tar_info)
-                graph_def = tf.compat.v1.GraphDef.FromString(
-                    file_handle.read())
+                graph_def = tf.compat.v1.GraphDef.FromString(file_handle.read())
                 break
         tar_file.close()
         # Raise an error if no graph was in the tarball
@@ -54,7 +52,7 @@ class MNetV2_DeepLabV3(object):
         """Runs inference on a single image.
 
         Args:
-        image: A PIL.Image object, raw input image.
+        image: A tf.Tensor, raw input image.
 
         Returns:
         resized_image: RGB image resized from original input image.
@@ -74,11 +72,10 @@ class MNetV2_DeepLabV3(object):
     @staticmethod
     def download(model_dir='./models'):
         """Downloads the pretrained model."""
-        MODEL_NAME = 'mobilenetv2_coco_cityscapes_trainfine'
+        # MODEL_NAME = 'mobilenetv2_coco_cityscapes_trainfine'
         MODEL_URL = 'deeplabv3_mnv2_cityscapes_train_2018_02_05.tar.gz'
         _DOWNLOAD_URL_PREFIX = 'http://download.tensorflow.org/models/'
         _TARBALL_NAME = 'deeplab_model.tar.gz'
-        FROZEN_GRAPH_NAME = 'frozen_inference_graph'
 
         tf.compat.v1.gfile.MakeDirs(model_dir)
         download_path = os.path.join(model_dir, _TARBALL_NAME)

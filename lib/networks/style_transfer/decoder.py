@@ -10,6 +10,7 @@ from .layers import ReflectionPad2D, DecoderBlock
 
 class Decoder(layers.Layer):
     """An decoder network based on MobileNetV2 with reflection padding."""
+
     def __init__(self, name='mobilenetv2_decoder', **kwargs):
         """Creates the encoder with."""
         super(Decoder, self).__init__(name=name, **kwargs)

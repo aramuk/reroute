@@ -49,14 +49,14 @@ if __name__ == '__main__':
     model = build_model(input_shape=INPUT_SHAPE)
 
     def has_shape(target, shape):
-        return all(dim == target_dim
-                   for dim, target_dim in zip(target.shape, shape))
+        return all(
+            dim == target_dim for dim, target_dim in zip(target.shape, shape))
 
     C = tf.random.uniform((10, 224, 224, 3))
     S = tf.random.uniform((10, 224, 224, 3))
 
     output, target, content_features, style_features = model([C, S])
-    
+
     assert len(
         content_features
     ) == 5, 'Encoder returns {} content feature maps; expected 5'.format(
