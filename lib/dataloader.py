@@ -24,14 +24,14 @@ class StyleTransferDataLoader():
         self.content_ds = tfds.load(
             'cityscapes/semantic_segmentation',
             split='train[:{}]'.format(length),
-            **content_options).map(lambda d: d['image_left'])
+            **content_options).map(lambda d: d['image_left']/255)
         if content_transform and callable(content_transform):
             self.content_ds = self.content_ds.map(content_transform)
         self.content_ds = self.content_ds.batch(batch_size)
         # Load and preprocess the style dataset
         self.style_ds = tfds.load('wikiart_images',
                                   split='train[:{}]'.format(length),
-                                  **style_options).map(lambda d: d['image'])
+                                  **style_options).map(lambda d: d['image']/255)
         if style_transform and callable(style_transform):
             self.style_ds = self.style_ds.map(style_transform)
         self.style_ds = self.style_ds.batch(self.batch_size)

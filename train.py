@@ -19,10 +19,10 @@ def train_model(content_height, content_width, style_height, style_width,
     train_loader = StyleTransferDataLoader(
         batch_size=batch_size,
         content_transform=lambda I: tf.image.random_crop(
-            tf.image.resize_with_pad(I, target_height=256, target_width=512),
+            tf.image.resize_with_pad(I, target_height=content_height, target_width=content_width),
             (crop_dim, crop_dim, 3)),
         style_transform=lambda I: tf.image.random_crop(
-            tf.image.resize_with_pad(I, target_height=256, target_width=256),
+            tf.image.resize_with_pad(I, target_height=style_height, target_width=style_width),
             (crop_dim, crop_dim, 3)))
 
     MobileAdaIN = build_model(input_shape=(crop_dim, crop_dim, 3))

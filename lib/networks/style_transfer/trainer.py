@@ -5,6 +5,7 @@
 import os
 import time
 
+import cv2
 import tensorflow as tf
 from tensorflow.keras import callbacks, optimizers
 
@@ -28,7 +29,7 @@ class Trainer():
         schedule = optimizers.schedules.InverseTimeDecay(
             learning_rate, 1, lr_decay)
         self.optimizer = optimizer(learning_rate=schedule, beta_1=momentum)
-        self.tensorboard = callbacks.Tensorboard(log_dir=log_dir,
+        self.tensorboard = callbacks.TensorBoard(log_dir=log_dir,
                                                  write_graph=True)
         self.tensorboard.set_model(self.model)
         self.save_dir = save_dir
@@ -38,7 +39,6 @@ class Trainer():
         self.epoch = 1
         self.total_epochs = 0
 
-    @tf.function
     def _train_one_step(self,
                         X,
                         step,
@@ -46,11 +46,14 @@ class Trainer():
                         output_freq=100):
         with tf.GradientTape() as tape:
             output, target, _, style_features = self.model(X, training=True)
+            # if step == 1:
+            #     cv2.imwrite('./output_' + str(self.epoch) + '_0.png', output.numpy()[0]*255)
             output_features = self.encoder(output)
             loss = self.loss_fn([style_features, output_features, target])
         grads = tape.gradient(loss, self.model.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
         self.tensorboard.on_batch_end(step, {'loss': loss})
+        loss = loss.numpy().item()
         if step % output_freq == 0:
             print('Epoch [{}/{}], Step [{}/{}], Loss: {:.6f}'.format(
                 self.epoch, self.total_epochs, step, total_steps, loss))
@@ -63,8 +66,7 @@ class Trainer():
         while self.epoch <= self.total_epochs:
             epoch_loss = 0.0
             for step, X in enumerate(dataset, start=1):
-                loss = self._train_one_step(X, step, len(dataset), self.epoch,
-                                            start + num_epochs + 1, output_freq)
+                loss = self._train_one_step(X, step, len(dataset), output_freq)
                 epoch_loss += loss
             print('------------[Epoch {}; Loss = {:.6f}]------------'.format(
                 self.epoch, epoch_loss))
