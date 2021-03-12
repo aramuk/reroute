@@ -1,99 +1,64 @@
 ##########################################################
-# Trains a style_transfer model.                         #
+# Main training loop.                                    #
 ##########################################################
 
-import os
-import time
+import argparse
 
 import tensorflow as tf
-from tensorflow.keras import callbacks, optimizers
+from tensorflow.keras import optimizers
 
+from lib.dataloader import StyleTransferDataLoader
 from lib.networks.style_transfer.layers import TVLoss
+from lib.networks.style_transfer.network import build_model
+from lib.networks.style_transfer.trainer import Trainer
 
 
-class Trainer():
+def train_model(content_height, content_width, style_height, style_width,
+                crop_dim, save_dir, log_dir, optimizer, learning_rate, lr_decay,
+                momentum, batch_size, num_epochs, output_freq):
+    train_loader = StyleTransferDataLoader(
+        batch_size=batch_size,
+        content_transform=lambda I: tf.image.random_crop(
+            tf.image.resize_with_pad(I, target_height=256, target_width=512),
+            (crop_dim, crop_dim, 3)),
+        style_transform=lambda I: tf.image.random_crop(
+            tf.image.resize_with_pad(I, target_height=256, target_width=256),
+            (crop_dim, crop_dim, 3)))
 
-    def __init__(self,
-                 model,
-                 loss_fn=TVLoss(),
-                 optimizer=optimizers.Adam,
-                 learning_rate=1e-4,
-                 lr_decay=5e-5,
-                 momentum=0.9):
-        self.model = model
-        self.encoder = model.get_layer('mobilenetv2_encoder')
-        self.loss_fn = loss_fn
-        schedule = optimizers.schedules.InverseTimeDecay(
-            learning_rate, 1, lr_decay)
-        self.optimizer = optimizer(learning_rate=schedule, beta_1=momentum)
-        self.tensorboard = callbacks.Tensorboard(log_dir='logs',
-                                                 write_graph=True)
-        self.tensorboard.set_model(self.model)
-        self.reset_epochs()
+    MobileAdaIN = build_model(input_shape=(crop_dim, crop_dim, 3))
+    trainer = Trainer(
+        MobileAdaIN,
+        loss_fn=TVLoss(),
+        optimizer=optimizers.Adam if optimizer == 'adam' else optimizers.SGD,
+        learning_rate=learning_rate,
+        lr_decay=lr_decay,
+        momentum=momentum,
+        log_dir=log_dir,
+        save_dir=save_dir)
 
-    def reset_epochs(self):
-        self.epoch = 1
-        self.total_epochs = 0
-
-    @tf.function
-    def _train_one_step(self,
-                        X,
-                        step,
-                        total_steps,
-                        epoch,
-                        total_epochs,
-                        output_freq=100):
-        with tf.GradientTape() as tape:
-            output, target, _, style_features = self.model(X, training=True)
-            output_features = self.encoder(output)
-            loss = self.loss_fn([style_features, output_features, target])
-        grads = tape.gradient(loss, self.model.trainable_weights)
-        self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
-        self.tensorboard.on_batch_end(step, {'loss': loss})
-        if step % output_freq == 0:
-            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.6f}'.format(
-                epoch, total_epochs, step, total_steps, loss))
-        return loss
-
-    def train(self, dataset, num_epochs=25, output_freq=100):
-        """Trains the style transfer model."""
-        self.total_epochs += num_epochs
-        start = time.time()
-        while self.epoch <= self.total_epochs:
-            epoch_loss = 0.0
-            for step, X in enumerate(dataset, start=1):
-                loss = self._train_one_step(X, step, len(dataset), self.epoch,
-                                            start + num_epochs + 1, output_freq)
-                epoch_loss += loss
-            print('------------[Epoch {}; Loss = {:.6f}]------------'.format(
-                self.epoch, epoch_loss))
-            self.epoch += 1
-            self.tensorboard.on_epoch_end(step, {'loss': loss})
-            self.save_model('./models/', tag='_checkpoint', overwrite=True)
-        time_elapsed = time.time() - start
-        print('Training complete in {:.0f}m {:.0f}s'.format(
-            time_elapsed // 60, time_elapsed % 60))
-
-    def save_model(self, save_dir, tag='_weights', overwrite=False):
-        if not os.path.exists(save_dir):
-            os.mkdir(save_dir)
-        file_name = os.path.join(save_dir,
-                                 '{}_{}.h5'.format(self.model.name, tag))
-        if os.path.exists(file_name):
-            if overwrite:
-                os.remove(file_name)
-            else:
-                raise ValueError('File at {} already exists'.format(file_name))
-        self.model.save_weights(file_name)
-
-    def load_model(self, file_path):
-        if not os.path.exists(file_path):
-            raise ValueError(
-                'Could not find a weights file at {}'.format(file_path))
-        self.model.load_weights(file_path)
+    trainer.train(train_loader, num_epochs=num_epochs, output_freq=output_freq)
 
 
 if __name__ == '__main__':
-    from lib.networks.style_transfer.network import build_model
-    MobileAdaIN = build_model()
-    trainer = Trainer(MobileAdaIN)
+    # yapf: disable
+    parser = argparse.ArgumentParser(description='Train the ReRoute stylee transfer model')
+    # Preprocessing
+    parser.add_argument('--content_height', type=int, default=256, help='The resized height of the content images')
+    parser.add_argument('--content_width', type=int, default=512, help='The resized width of the content images')
+    parser.add_argument('--style_height', type=int, default=256, help='The resized height of the style images')
+    parser.add_argument('--style_width', type=int, default=256, help='The resized width of the style images')
+    parser.add_argument('--crop_dim', type=int, default=224, help='The dimensions of the random crop')
+    # Logs
+    parser.add_argument('--save_dir', default='./models', help='The directory to save the model weights at checkpoints')
+    parser.add_argument('--log_dir', default='./models', help='The directory to save TensorBoard logs')
+    # Training
+    parser.add_argument('--optimizer', default='adam', help='The optimization algorithm to apply to the decoder')
+    parser.add_argument('--learning_rate', type=float, default=1e-4, help='The initial learning rate for the optimizer')
+    parser.add_argument('--lr_decay', type=float, default=5e-5, help='The rate of decay for the learning rate')
+    parser.add_argument('--momentum', type=float, default=0.9, help='The momentum for the optimizer')
+    parser.add_argument('--batch_size', type=int, default=8, help='The number of training samples in a batch')
+    parser.add_argument('--num_epochs', type=int, default=25, help='The number of training epochs')
+    parser.add_argument('--output_freq', type=int, default=100, help='How frequently to output batch information')
+    # yapf: enable
+    args = parser.parse_args()
+    train_model(**vars(args))
