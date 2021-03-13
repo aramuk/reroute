@@ -31,6 +31,12 @@ class AdaIN(layers.Layer):
         std_S = tf.math.sqrt(var_S + self.epsilon)
         return std_S * (content - mean_C) / std_C + mean_S
 
+    def get_config(self):
+        """Get a dict of assigned options for this layer."""
+        base_config = super(DecoderBlock, self).get_config()
+        config = {'epsilon': self.epsilon, **base_config}
+        return config
+
 
 class ReflectionPad2D(layers.Layer):
     """Pads the height and width dimensions of an input tensor using reflection padding."""
@@ -69,7 +75,7 @@ class DecoderBlock(layers.Layer):
                                    data_format='channels_last',
                                    activation='linear',
                                    name=name + '_expand')
-        # self.relu1 = layers.ReLU(max_value=6., name=name + '_expand_relu')
+        self.relu1 = layers.ReLU(max_value=6., name=name + '_expand_relu')
         self.pad2 = ReflectionPad2D([[1, 1], [1, 1]],
                                     name=name + '_depthwise_reflection_pad')
         self.conv2 = layers.DepthwiseConv2D(kernel_size=(3, 3),
@@ -78,7 +84,7 @@ class DecoderBlock(layers.Layer):
                                             activation='linear',
                                             data_format='channels_last',
                                             name=name + '_depthwise')
-        # self.relu2 = layers.ReLU(max_value=6., name=name + '_depthwise_relu')
+        self.relu2 = layers.ReLU(max_value=6., name=name + '_depthwise_relu')
         self.pad3 = ReflectionPad2D([[0, 0], [0, 0]],
                                     name=name + '_project_reflection_pad')
         self.conv3 = layers.Conv2D(self.filters[1],
@@ -92,10 +98,10 @@ class DecoderBlock(layers.Layer):
         """Do a forward pass of the Decoder block on a tensor."""
         output = self.pad1(x)
         output = self.conv1(output)
-        # output = self.relu1(output)
+        output = self.relu1(output)
         output = self.pad2(output)
         output = self.conv2(output)
-        # output = self.relu2(output)
+        output = self.relu2(output)
         output = self.pad3(output)
         output = self.conv3(output)
         return output
@@ -125,3 +131,13 @@ class TVLoss(layers.Layer):
         L_c = content_loss(target, output_features[-1])
         L_s = style_loss(style_features, output_features)
         return self.content_weight * L_c + self.style_weight * L_s
+
+    def get_config(self):
+        """Get a dict of assigned options for this layer."""
+        base_config = super(TVLoss, self).get_config()
+        config = {
+            'content_weight': self.content_weight,
+            'style_weight': self.style_weight, 
+            **base_config
+        }
+        return config

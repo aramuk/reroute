@@ -25,6 +25,7 @@ class Encoder(layers.Layer):
         """Creates the encoder with."""
         super(Encoder, self).__init__(name=name, **kwargs)
         self.output_layers = set(output_layers)
+        self.cutoff_layer = cutoff_layer
         # Transfer learn a model from MobileNetV2()
         backbone = keras.applications.MobileNetV2()
         last_layer = backbone.get_layer(cutoff_layer)
@@ -66,6 +67,16 @@ class Encoder(layers.Layer):
             if layer.name in self.output_layers:
                 outputs.append(z)
         return outputs
+    
+    def get_config(self):
+        """Get a dict of assigned options for this layer."""
+        base_config = super(Encoder, self).get_config()
+        config = {
+            'output_layers': list(self.output_layers), 
+            'cutoff_layer': self.cutoff_layer, 
+            **base_config
+        }
+        return config
 
 
 if __name__ == '__main__':

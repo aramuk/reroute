@@ -28,7 +28,7 @@ class Trainer():
         self.loss_fn = loss_fn
         schedule = optimizers.schedules.InverseTimeDecay(
             learning_rate, 1, lr_decay)
-        self.optimizer = optimizer(learning_rate=schedule, beta_1=momentum)
+        self.optimizer = optimizer(learning_rate=learning_rate, beta_1=momentum)
         self.tensorboard = callbacks.TensorBoard(log_dir=log_dir,
                                                  write_graph=True)
         self.tensorboard.set_model(self.model)
@@ -46,8 +46,8 @@ class Trainer():
                         output_freq=100):
         with tf.GradientTape() as tape:
             output, target, _, style_features = self.model(X, training=True)
-            # if step == 1:
-            #     cv2.imwrite('./output_' + str(self.epoch) + '_0.png', output.numpy()[0]*255)
+            if step == 1:
+                cv2.imwrite('./output_' + str(self.epoch) + '_1_0.png', output.numpy()[0]*255)
             output_features = self.encoder(output)
             loss = self.loss_fn([style_features, output_features, target])
         grads = tape.gradient(loss, self.model.trainable_weights)
