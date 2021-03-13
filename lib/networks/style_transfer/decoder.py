@@ -16,7 +16,6 @@ class Decoder(layers.Layer):
         super(Decoder, self).__init__(name=name, **kwargs)
         self._layers = [
             DecoderBlock([96, 64], name='decode_1'),
-            # layers.UpSampling2D(size=(2, 2), interpolation='bilinear'),
             layers.Conv2DTranspose(64,
                                    kernel_size=(2, 2),
                                    strides=(2, 2),
@@ -26,8 +25,7 @@ class Decoder(layers.Layer):
             # DecoderBlock([64, 64], name='decode_2'),
             # DecoderBlock([64, 64], name='decode_3'),
             # DecoderBlock([64, 64], name='decode_4'),
-            # DecoderBlock([64, 32], name='decode_5'),
-            # layers.UpSampling2D(size=(2, 2), interpolation='bilinear'),
+            DecoderBlock([64, 32], name='decode_5'),
             layers.Conv2DTranspose(32,
                                    kernel_size=(2, 2),
                                    strides=(2, 2),
@@ -36,8 +34,7 @@ class Decoder(layers.Layer):
                                    name='upconv_2'),
             # DecoderBlock([32, 32], name='decode_6'),
             # DecoderBlock([32, 32], name='decode_7'),
-            # DecoderBlock([32, 24], name='decode_8'),
-            # layers.UpSampling2D(size=(2, 2), interpolation='bilinear'),
+            DecoderBlock([32, 24], name='decode_8'),
             layers.Conv2DTranspose(24,
                                    kernel_size=(2, 2),
                                    strides=(2, 2),
@@ -46,7 +43,6 @@ class Decoder(layers.Layer):
                                    name='upconv_3'),
             # DecoderBlock([24, 24], name='decode_9'),
             # DecoderBlock([24, 16], name='decode_10'),
-            # layers.UpSampling2D(size=(2, 2), interpolation='bilinear'),
             layers.Conv2DTranspose(16,
                                    kernel_size=(2, 2),
                                    strides=(2, 2),
@@ -78,4 +74,4 @@ if __name__ == '__main__':
     test = tf.random.uniform(input_shape)
     assert test.shape == input_shape
     output = block(test)
-    assert output.shape == (1, 224, 224, 3)
+    assert output.shape == (1, 224, 224, 3), 'Received {}'.format(output.shape)

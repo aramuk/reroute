@@ -18,7 +18,6 @@ def train_model(content_height, content_width, style_height, style_width,
                 momentum, batch_size, num_epochs, output_freq):
     train_loader = StyleTransferDataLoader(
         batch_size=batch_size,
-        length=280,
         content_transform=lambda I: tf.image.random_crop(
             tf.image.resize_with_pad(I, target_height=content_height, target_width=content_width),
             (crop_dim, crop_dim, 3)),
@@ -38,6 +37,7 @@ def train_model(content_height, content_width, style_height, style_width,
         save_dir=save_dir)
 
     trainer.train(train_loader, num_epochs=num_epochs, output_freq=output_freq)
+    trainer.save_model('_first_round_final')
 
 
 if __name__ == '__main__':
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     parser.add_argument('--crop_dim', type=int, default=224, help='The dimensions of the random crop')
     # Logs
     parser.add_argument('--save_dir', default='./models', help='The directory to save the model weights at checkpoints')
-    parser.add_argument('--log_dir', default='./models', help='The directory to save TensorBoard logs')
+    parser.add_argument('--log_dir', default='./logs', help='The directory to save TensorBoard logs')
     # Training
     parser.add_argument('--optimizer', default='adam', help='The optimization algorithm to apply to the decoder')
     parser.add_argument('--learning_rate', type=float, default=1e-4, help='The initial learning rate for the optimizer')

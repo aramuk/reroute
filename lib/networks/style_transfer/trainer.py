@@ -47,7 +47,7 @@ class Trainer():
         with tf.GradientTape() as tape:
             output, target, _, style_features = self.model(X, training=True)
             if step == 1:
-                cv2.imwrite('./output_' + str(self.epoch) + '_1_0.png', output.numpy()[0]*255)
+                cv2.imwrite('./outputs/' + str(self.epoch) + '_1_0.png', output.numpy()[0]*255)
             output_features = self.encoder(output)
             loss = self.loss_fn([style_features, output_features, target])
         grads = tape.gradient(loss, self.model.trainable_weights)
